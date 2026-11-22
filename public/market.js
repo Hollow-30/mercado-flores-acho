@@ -6,13 +6,16 @@ const content = $('panel-content');
 const currency = new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' });
 const money = cents => currency.format(cents / 100);
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'})[ch]);
+const categories = ['Rosas', 'Girasoles', 'Arreglos', 'Coronas'];
+// Imágenes ilustrativas exclusivas de los productos de demostración.
 const pictures = {
-  Rosas: 'photo-1518709268805-4e9042af9f23',
-  Girasoles: 'photo-1597848212624-a19eb35e2651',
-  Arreglos: 'photo-1526047932273-341f2a7631f9',
-  Coronas: 'photo-1457089328109-e5d9bd499191'
+  'Casa Rosa|Rosas carmesí': '/images/rosas-rojas.jpg',
+  'Casa Rosa|Rosas rosadas': '/images/rosas-rosadas.jpg',
+  'Flores del Rímac|Corona de homenaje': '/images/corona.jpg',
+  'Flores del Rímac|Girasoles del valle': 'https://images.unsplash.com/photo-1597848212624-a19eb35e2651?auto=format&fit=crop&w=650&q=80',
+  'Jardín de Acho|Ramo jardín de temporada': 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=650&q=80',
+  'Jardín de Acho|Arreglo silvestre': 'https://images.unsplash.com/photo-1526047932273-341f2a7631f9?auto=format&fit=crop&w=650&q=80'
 };
-const categories = Object.keys(pictures);
 const statuses = {
   pending_payment:'Pendiente de pago', paid:'Pagado', preparing:'En preparación',
   ready:'Listo', picked_up:'Recogido', out_for_delivery:'En reparto', delivered:'Entregado',
@@ -27,8 +30,11 @@ let orderToken = sessionStorage.getItem('acho.order') ?? '';
 let requestId = crypto.randomUUID();
 let toastTimer;
 
-function picture(p, size = 650) {
-  return 'https://images.unsplash.com/' + pictures[p.category] + '?auto=format&fit=crop&w=' + size + '&q=80';
+function picture(p, className = '') {
+  const src = pictures[`${p.stalls.name}|${p.name}`];
+  return src
+    ? `<img class="${className}" loading="lazy" decoding="async" src="${src}" alt="" width="650" height="320">`
+    : `<div class="product-placeholder ${className}">Imagen no disponible</div>`;
 }
 
 async function api(action, { method = 'GET', data, id, session = false } = {}) {
@@ -81,7 +87,7 @@ function renderCatalog() {
   $('catalog-status').textContent = filtered.length ? filtered.length + ' productos' : 'No hay productos que coincidan con los filtros.';
   $('products').innerHTML = filtered.map(p => `
     <article class="product">
-      <img loading="lazy" decoding="async" src="${picture(p)}" alt="" width="650" height="320">
+      ${picture(p)}
       <div class="product-body">
         <div class="meta">${escapeHtml(p.stalls.name)} · ${escapeHtml(p.category)}</div>
         <h3>${escapeHtml(p.name)}</h3>
@@ -106,7 +112,8 @@ async function loadCatalog() {
 function detail(id) {
   const p = products.find(row => row.id === id);
   if (!p) return;
-  panel(p.name, `<img class="detail-image" src="${picture(p)}" alt="">
+  panel(p.name, `${picture(p, 'detail-image')}
+    <p class="muted">Imagen referencial. La presentación puede variar.</p>
     <p class="muted">${escapeHtml(p.stalls.name)} · ${escapeHtml(p.stalls.location)}</p>
     <p>${escapeHtml(p.description)}</p>
     <p><strong>${money(p.price_cents)}</strong> · ${escapeHtml(p.unit)} · ${p.stock ? p.stock + ' disponibles' : 'Agotado'}</p>

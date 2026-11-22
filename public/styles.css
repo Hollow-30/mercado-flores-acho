@@ -26,6 +26,8 @@ button:hover:not(:disabled) { border-color: var(--green); }
 .brand { font-family: Georgia, serif; font-size: clamp(1.2rem,3vw,1.65rem); font-weight: bold; text-decoration: none; }
 .brand span { color: var(--green); }
 nav { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; }
+nav a { padding: .66rem .5rem; text-decoration: none; font-size: .9rem; }
+nav a:hover { text-decoration: underline; }
 nav button:not(.primary) { border-color: transparent; background: transparent; }
 .primary { border: 1px solid var(--green); background: var(--green); color: white; font-weight: 650; }
 .primary:hover:not(:disabled) { background: var(--dark); }
@@ -37,6 +39,15 @@ nav button:not(.primary) { border-color: transparent; background: transparent; }
 .hero p { max-width: 31rem; line-height: 1.65; }
 .location { color: #ead5a7; font-size: .86rem; letter-spacing: .095em; text-transform: uppercase; font-weight: 620; }
 .hero-link { display: inline-block; text-decoration: none; background: #f5ebd1; color: var(--dark); padding: .8rem 1rem; border-radius: .35rem; margin-top: .6rem; }
+.hero .hero-disclaimer { font-size: .85rem; color: #f5ebd1; }
+.how { padding-block: 3rem 1rem; }
+.how h2 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 500; margin: .25rem 0 1.5rem; }
+.eyebrow { color: var(--green); text-transform: uppercase; letter-spacing: .1em; font-size: .8rem; font-weight: 700; }
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+.steps article { border-top: 1px solid var(--line); padding-top: 1rem; }
+.steps span { color: var(--green); font-weight: 700; }
+.steps h3 { font-family: Georgia, serif; font-size: 1.4rem; font-weight: 500; margin: .5rem 0; }
+.steps p { color: var(--muted); line-height: 1.5; }
 .catalog { padding-block: 2.6rem 3.8rem; scroll-margin-top: 1rem; }
 .catalog h2 { font-size: clamp(2.15rem, 6vw, 3.4rem); font-weight: 500; margin: 0 0 .8rem; letter-spacing: -.045em; }
 .catalog-note { color: var(--muted); font-size: .9rem; margin: 0 0 1rem; }
@@ -75,4 +86,15 @@ form .primary { justify-self: start; }
 .skip { position: absolute; transform: translateY(-150%); background: white; z-index: 3; padding: .8rem; }
 .skip:focus { transform: none; }
 @media (max-width: 800px) { .product-grid { grid-template-columns: repeat(2,1fr); } }
-@media (max-width: 550px) { .site-header { align-items: start; flex-direction: column; padding-block: .8rem; } nav button { padding: .5rem; } .product-grid, .filters { grid-template-columns: 1fr; } }
+@media (max-width: 550px) {
+  .wrap { width: calc(100% - 2rem); }
+  .site-header { align-items: start; flex-direction: column; padding-block: .8rem; }
+  nav { width: 100%; gap: .15rem; }
+  nav a, nav button { min-height: 44px; display: inline-flex; align-items: center; padding: .5rem; }
+  .hero h1 { font-size: clamp(2.7rem, 12vw, 3.5rem); }
+  .product-grid, .filters, .steps { grid-template-columns: 1fr; }
+  .line-item { flex-wrap: wrap; }
+  .line-item > span { flex: 1 1 100%; overflow-wrap: anywhere; }
+  dialog { padding: 1rem; }
+  form .primary { min-height: 44px; }
+}

@@ -29,6 +29,7 @@ let access = sessionStorage.getItem('acho.session') ?? '';
 let orderToken = sessionStorage.getItem('acho.order') ?? '';
 let requestId = crypto.randomUUID();
 let toastTimer;
+let checkoutDraft = {};
 
 function picture(p, className = '') {
   const src = pictures[`${p.stalls.name}|${p.name}`];
@@ -45,7 +46,9 @@ async function api(action, { method = 'GET', data, id, session = false } = {}) {
   const result = await fetch('/api/market?' + params, {
     method, headers, body: data === undefined ? undefined : JSON.stringify(data)
   });
-  const body = await result.json();
+  let body;
+  try { body = await result.json(); }
+  catch { throw new Error('El servicio no está disponible. Inténtalo nuevamente más tarde.'); }
   if (!result.ok) throw new Error(body.message || 'Ocurrió un error al procesar la solicitud.');
   return body;
 }
@@ -101,6 +104,20 @@ async function loadCatalog() {
   $('catalog-status').textContent = 'Cargando catálogo…';
   try {
     [products, deliveryAreas] = await Promise.all([api('catalog'), api('delivery')]);
+    if (!items.length) {
+      try {
+        const saved = JSON.parse(sessionStorage.getItem('acho.cart') || '[]');
+        if (Array.isArray(saved)) {
+          for (const row of saved) {
+            const product = products.find(p => p.id === row.id);
+            if (product && Number.isInteger(row.quantity) && row.quantity > 0 && row.quantity <= product.stock) {
+              try { items = addToCart(items, product, row.quantity); } catch { /* Omitir productos incompatibles. */ }
+            }
+          }
+        }
+      } catch { sessionStorage.removeItem('acho.cart'); }
+      updateCount();
+    }
     const currentStall = $('stall').value;
     const stalls = new Map(products.map(p => [p.stall_id, p.stalls.name]));
     $('stall').innerHTML = '<option value="">Todos</option>' + [...stalls].map(([id,name]) => `<option value="${id}">${escapeHtml(name)}</option>`).join('');
@@ -120,9 +137,14 @@ function detail(id) {
     <button type="button" class="primary" data-buy="${p.id}" ${p.stock ? '' : 'disabled'}>Agregar al carrito</button>`);
 }
 
-function updateCount() { $('cart-count').textContent = items.reduce((n,row) => n + row.quantity,0); }
+function updateCount() {
+  $('cart-count').textContent = items.reduce((n,row) => n + row.quantity,0);
+  sessionStorage.setItem('acho.cart', JSON.stringify(items.map(row => ({id:row.product.id, quantity:row.quantity}))));
+}
 
 function renderCart() {
+  const existingForm = $('checkout');
+  if (existingForm) checkoutDraft = Object.fromEntries(new FormData(existingForm));
   if (!items.length) { panel('Carrito', '<p>Tu carrito está vacío. Explora el catálogo para agregar flores.</p>'); return; }
   const rows = items.map(({product:p, quantity}) => `<div class="line-item"><span>${escapeHtml(p.name)} <small>${money(p.price_cents)}</small></span>
     <input type="number" min="0" max="${Math.min(999,p.stock)}" value="${quantity}" data-quantity="${p.id}" aria-label="Cantidad de ${escapeHtml(p.name)}">
@@ -150,6 +172,10 @@ function renderCart() {
   }
   $('mode').addEventListener('change',updateTotal);
   $('district').addEventListener('change',updateTotal);
+  for (const [name, value] of Object.entries(checkoutDraft)) {
+    const field = $('checkout').elements.namedItem(name);
+    if (field) field.value = value;
+  }
   updateTotal();
   bindForm('checkout',async data=>{
     const order = await api('createOrder',{ method:'POST',data:{
@@ -160,6 +186,7 @@ function renderCart() {
     orderToken = order.token;
     sessionStorage.setItem('acho.order',orderToken);
     items = [];
+    checkoutDraft = {};
     requestId = crypto.randomUUID();
     updateCount();
     await Promise.all([loadCatalog(),renderTracking(true)]);
@@ -167,7 +194,13 @@ function renderCart() {
 }
 
 async function renderTracking(created=false) {
-  panel('Mi pedido', `<form id="track-form"><label>Código privado de seguimiento <input name="token" required value="${escapeHtml(orderToken)}" placeholder="Código generado al confirmar el pedido"></label><button class="primary" type="submit">Consultar</button><p class="error" role="alert"></p></form><div id="track-result"></div>`);
+  panel('Mi pedido', `<form id="track-form"><label>Código privado de seguimiento <input name="token" required value="${escapeHtml(orderToken)}" placeholder="Código generado al confirmar el pedido"></label><div class="actions"><button class="primary" type="submit">Consultar</button><button id="copy-token" type="button">Copiar código</button></div><p class="error" role="alert"></p></form><div id="track-result"></div>`);
+  $('copy-token').onclick = async () => {
+    const input = $('track-form').elements.token;
+    if (!input.value.trim()) { showToast('Ingresa primero tu código de seguimiento.'); return; }
+    try { await navigator.clipboard.writeText(input.value.trim()); showToast('Código copiado. Guárdalo en un lugar seguro.'); }
+    catch { input.focus(); input.select(); showToast('Selecciona y copia el código.'); }
+  };
   bindForm('track-form',async data=>{
     orderToken = data.get('token').trim();
     await loadOrder(false);
@@ -203,12 +236,15 @@ async function loadOrder(created) {
 }
 
 function showLogin() {
-  panel('Mi puesto', `<p>Ingresa con la cuenta asignada a tu puesto.</p>
+  panel('Acceso para comerciantes', `<p>Administra los productos y pedidos de tu puesto desde aquí.</p>
+  <p class="muted">Usa el correo y la contraseña asignados a tu puesto. Si aún no tienes una cuenta, solicita el acceso a la administración del proyecto.</p>
   <form id="login-form">
     <label>Correo <input type="email" name="email" autocomplete="username" required></label>
-    <label>Contraseña <input type="password" name="password" autocomplete="current-password" required></label>
+    <label>Contraseña <input id="merchant-password" type="password" name="password" autocomplete="current-password" required></label>
+    <label class="checkbox"><input id="show-password" type="checkbox"> Mostrar contraseña</label>
     <button class="primary" type="submit">Iniciar sesión</button><p class="error" role="alert"></p>
   </form>`);
+  $('show-password').onchange = event => { $('merchant-password').type = event.target.checked ? 'text' : 'password'; };
   bindForm('login-form',async data=>{
     const session = await api('login',{method:'POST',data:Object.fromEntries(data)});
     const nextAccess = session.access_token;

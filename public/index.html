@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es-PE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Catálogo digital de flores, ramos y arreglos del Mercado de Flores de Acho.">
+  <title>Mercado de Flores de Acho</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script type="module" src="/market.js"></script>
+</head>
+<body>
+  <a class="skip" href="#catalogo">Ir al catálogo</a>
+  <header class="site-header wrap">
+    <a class="brand" href="#">Mercado de Flores <span>de Acho</span></a>
+    <nav aria-label="Acciones del mercado">
+      <button type="button" data-open="seguimiento">Mi pedido</button>
+      <button type="button" data-open="puesto">Mi puesto</button>
+      <button type="button" class="primary" data-open="carrito">Carrito <span id="cart-count">0</span></button>
+    </nav>
+  </header>
+  <main>
+    <section class="hero">
+      <div class="wrap hero-inner">
+        <div>
+          <p class="location">Mercado de Flores de Acho · Rímac, Lima</p>
+          <h1>Flores frescas,<br>directo de Acho.</h1>
+          <p>Encuentra flores, ramos y arreglos de los puestos del mercado. Haz tu pedido para recogerlo o recibirlo en casa.</p>
+          <a href="#catalogo" class="primary hero-link">Explorar catálogo</a>
+        </div>
+      </div>
+    </section>
+    <section class="wrap catalog" id="catalogo" aria-labelledby="catalog-title">
+      <h2 id="catalog-title">Catálogo de flores</h2>
+      <div class="filters">
+        <label>Buscar <input id="search" type="search" placeholder="Nombre de la flor o del puesto"></label>
+        <label>Categoría <select id="category"><option value="">Todas</option><option>Rosas</option><option>Girasoles</option><option>Arreglos</option><option>Coronas</option></select></label>
+        <label>Puesto <select id="stall"><option value="">Todos</option></select></label>
+      </div>
+      <p id="catalog-status" role="status"></p>
+      <div id="products" class="product-grid"></div>
+    </section>
+  </main>
+  <footer class="wrap footer">
+    <strong>Mercado de Flores de Acho</strong>
+    <span>Prototipo académico · Usa datos ficticios. Los pagos se simulan.</span>
+  </footer>
+  <p id="toast" class="toast" role="status" hidden></p>
+  <dialog id="panel" aria-labelledby="panel-title">
+    <header><h2 id="panel-title"></h2><button id="close-panel" type="button" aria-label="Cerrar">×</button></header>
+    <div id="panel-content"></div>
+  </dialog>
+</body>
+</html>

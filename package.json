@@ -1,0 +1,12 @@
+{
+  "name": "mercado-flores-acho",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {"node": "24.x"},
+  "scripts": {
+    "build": "node scripts/check-build.mjs",
+    "test": "node --test",
+    "security": "npm audit --audit-level=high && node scripts/check-security.mjs"
+  }
+}
